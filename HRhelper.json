@@ -1,0 +1,2458 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1408,
+        -1056
+      ],
+      "id": "9d3e87cd-efa5-4a1b-af81-8429aadb633a",
+      "name": "Telegram Trigger",
+      "webhookId": "3351f130-8496-4221-811d-6b89d42338f6",
+      "credentials": {
+        "telegramApi": {
+          "id": "QQNR1PIxv7YePQqI",
+          "name": "hr"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://aideportment.nl.tuna.am/webhook/UserVerification",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-api-key",
+              "value": "f2b8f91d3c7a4e25a6c1d9f0b3e67a12c9d4f6b8e3a1c5d2f0e9b7a6c3d1f842"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $('Edit Fields2').item.json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -880,
+        -1056
+      ],
+      "id": "ef16f5e9-f6fd-40ed-bfb3-41f8f3309b84",
+      "name": "HTTP Request18"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c472cae9-26be-4075-9c85-eba19346aa8a",
+              "name": "NameProcessing",
+              "value": "AudioGood",
+              "type": "string"
+            },
+            {
+              "id": "59ceff79-08e5-490c-a644-741e335fc5dd",
+              "name": "Deportment",
+              "value": "Отдел промпт-инжиниринга и автоматизаций, Дирекция по управлению человеческими ресурсами",
+              "type": "string"
+            },
+            {
+              "id": "e2dbe40f-4106-49c0-a754-0470f9d6a234",
+              "name": "UserTG",
+              "value": "={{ $json.message.from.id }}{{ $json.callback_query.message.chat.id }}",
+              "type": "number"
+            },
+            {
+              "id": "ee942b5f-e86e-4873-93ee-6be7490628d8",
+              "name": "UserName",
+              "value": "={{ $json.message.from.username }}{{ $json.callback_query.message.chat.username }}",
+              "type": "string"
+            },
+            {
+              "id": "bb080f35-6858-43c0-ac6a-873a218df019",
+              "name": "Date",
+              "value": "={{ $json.message.date }}{{ $json.callback_query.message.date }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1232,
+        -1056
+      ],
+      "id": "cdde4ab9-c024-4398-bcd4-1980075c0d88",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1216,
+        -1456
+      ],
+      "id": "2f3a92e6-c90a-4b6f-8f77-238de3fc1b84",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "chatId": "379336096",
+        "text": "=Ошибка: {{ $json.execution.error.message }}\nНода: {{ $json.execution.lastNodeExecuted }}\nWorkflow: {{ $json.workflow.name }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -960,
+        -1552
+      ],
+      "id": "a5f151b6-a69b-473d-920a-e8eb1db40809",
+      "name": "Send a text message1",
+      "webhookId": "acb0e55a-2f1f-405c-b7d7-500351b55d06",
+      "credentials": {},
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## ERROR",
+        "height": 416,
+        "width": 576,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1280,
+        -1600
+      ],
+      "id": "9da5aff2-2435-4a5e-b057-8fc485af5217",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "=Ошибка во время выполнения процесса",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -960,
+        -1360
+      ],
+      "id": "0d774def-da04-4b7a-a893-2a9c9079ef9c",
+      "name": "Send a text message2",
+      "webhookId": "acb0e55a-2f1f-405c-b7d7-500351b55d06",
+      "credentials": {},
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "command": "=BASE=\"/home/node/.n8n/MainN8NFolders/creo\"\n\nfor d in creoclone creovoice Ready; do\n  TARGET=\"$BASE/$d\"\n  if [ -d \"$TARGET\" ]; then\n    echo \"➤ Очищаем $TARGET…\"\n    find \"$TARGET\" -type f \\( \\\n         -iname '*.mp3' -o \\\n         -iname '*.mp4' -o \\\n         -iname '*.wav' \\\n    \\) -print -delete\n  else\n    echo \"⚠️  Папка не найдена: $TARGET\"\n  fi\ndone\n"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        -656
+      ],
+      "id": "5b4f771f-72dd-48a3-a492-5ec11c3d0eef",
+      "name": "clear"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -144,
+        -864
+      ],
+      "id": "94165ba9-722d-41e3-9ba6-6b3cf9411b91",
+      "name": "Wait1",
+      "webhookId": "119b0c04-d8b3-46ae-b8c8-63180486e991"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('split email').first().json.nickname }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1U50FHWjYE5Fa1e-TpHAOmUoaoeMIL2DV",
+          "mode": "list",
+          "cachedResultName": "docs",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1U50FHWjYE5Fa1e-TpHAOmUoaoeMIL2DV"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -304,
+        -864
+      ],
+      "id": "88f806de-e7e1-4f94-b97e-f6de19a73c24",
+      "name": "create folder for nickname1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "RQPytk6CITxF8zOj",
+          "name": "Google Drive account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "={{ $json.nickname }}",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1U50FHWjYE5Fa1e-TpHAOmUoaoeMIL2DV",
+            "mode": "list",
+            "cachedResultName": "docs",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1U50FHWjYE5Fa1e-TpHAOmUoaoeMIL2DV"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        32,
+        -1072
+      ],
+      "id": "9cae16df-c148-4ec4-90b2-3f8eb7b7518a",
+      "name": "search folders nicnname1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "RQPytk6CITxF8zOj",
+          "name": "Google Drive account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "={{ $('split email').first().json.nickname }}",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1U50FHWjYE5Fa1e-TpHAOmUoaoeMIL2DV",
+            "mode": "list",
+            "cachedResultName": "docs",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1U50FHWjYE5Fa1e-TpHAOmUoaoeMIL2DV"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        16,
+        -864
+      ],
+      "id": "2e59e93c-31ce-4392-b7cc-d14cebdd5645",
+      "name": "serarch folders nickname1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "RQPytk6CITxF8zOj",
+          "name": "Google Drive account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $json.data['ФИО'] }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('valid folder?').first().json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        544,
+        -1072
+      ],
+      "id": "41c690fe-57bf-4fb2-b269-8c0b0c668d1a",
+      "name": "Create folder candidate",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "RQPytk6CITxF8zOj",
+          "name": "Google Drive account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        944,
+        -656
+      ],
+      "id": "303b3191-bb7b-46b2-af26-5a343e92fdec",
+      "name": "Wait2",
+      "webhookId": "5e855ddf-4f04-4f93-aca9-cba4a2dca484"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "=",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $('Create folder candidate').first().json.id }}",
+            "mode": "id"
+          }
+        },
+        "options": {
+          "fields": [
+            "mimeType",
+            "id",
+            "name"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1296,
+        -656
+      ],
+      "id": "060e82dc-5805-4877-a257-04bd7a893bfb",
+      "name": "search file in folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "RQPytk6CITxF8zOj",
+          "name": "Google Drive account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "aeadda23-cfc3-434e-9680-a97b3f6b3e63",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1456,
+        -656
+      ],
+      "id": "7be7771f-2397-4009-9682-6d4d7915cf06",
+      "name": "id file valid?"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2416,
+        -1072
+      ],
+      "id": "5a9f6dcb-a63c-47e8-b50c-5845a2160976",
+      "name": "Download file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "RQPytk6CITxF8zOj",
+          "name": "Google Drive account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "={{ $('Telegram Trigger').first().json.message.from.id }}",
+        "message": "Подтвердите загрузку файлов",
+        "approvalOptions": {
+          "values": {
+            "approveLabel": "✅ Подтвердить"
+          }
+        },
+        "options": {
+          "limitWaitTime": {
+            "values": {
+              "resumeAmount": 15,
+              "resumeUnit": "minutes"
+            }
+          },
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        -656
+      ],
+      "id": "c1c5a80c-883e-4306-aca8-c669e80df7d6",
+      "name": "add file google drive",
+      "webhookId": "9abac132-0a14-4165-8cc2-294c6f9bc517",
+      "credentials": {
+        "telegramApi": {
+          "id": "QQNR1PIxv7YePQqI",
+          "name": "hr"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a11c5557-05fe-4709-88ca-8f4968d8709b",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        -1072
+      ],
+      "id": "eb548ebd-d2dd-471f-bf5d-0938815c5f03",
+      "name": "valid folder?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e23b210b-1d65-4671-b260-58b62c50a13d",
+              "leftValue": "={{ $json.Permission.toBoolean() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -704,
+        -1056
+      ],
+      "id": "2ad03f5e-38ca-4236-a315-1d5c9d9e268f",
+      "name": "valid main?"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "id"
+            },
+            {
+              "fieldToAggregate": "name"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1824,
+        -864
+      ],
+      "id": "09d95355-0628-4024-b1bf-05541d8d0fa1",
+      "name": "sorting id video list"
+    },
+    {
+      "parameters": {
+        "command": "=#!/bin/bash\n\n# Путь к рабочим директориям\nSOURCE_DIR=\"/home/node/.n8n/MainN8NFolders/creo/creoclone\"\nOUTPUT_DIR=\"/home/node/.n8n/MainN8NFolders/creo/Ready\"\nFILELIST=\"${OUTPUT_DIR}/filelist.txt\"\nOUTPUT_FILE=\"${OUTPUT_DIR}/merged.mp3\"\n\n# Создаем директорию если не существует\nmkdir -p \"$OUTPUT_DIR\"\n\n# Удаляем старый filelist\nrm -f \"$FILELIST\"\n\n# Находим все аудио файлы (любые популярные форматы)\nfind \"$SOURCE_DIR\" -type f \\( \\\n  -iname \"*.ogg\" -o \\\n  -iname \"*.wav\" -o \\\n  -iname \"*.mp3\" -o \\\n  -iname \"*.m4a\" -o \\\n  -iname \"*.flac\" -o \\\n  -iname \"*.opus\" -o \\\n  -iname \"*.aac\" \\\n\\) | sort | while read file; do\n  echo \"file '$file'\" >> \"$FILELIST\"\ndone\n\n# Проверяем что нашлись файлы\nif [ ! -s \"$FILELIST\" ]; then\n  echo \"ERROR: No audio files found in $SOURCE_DIR\"\n  exit 1\nfi\n\n# Выводим список файлов для отладки\necho \"Found files:\"\ncat \"$FILELIST\"\n\n# Склеиваем файлы\nffmpeg -y -f concat -safe 0 -i \"$FILELIST\" \\\n  -c:a libmp3lame \\\n  -q:a 2 \\\n  \"$OUTPUT_FILE\"\n\n# Проверяем результат\nif [ -f \"$OUTPUT_FILE\" ]; then\n  echo \"SUCCESS: Merged file created at $OUTPUT_FILE\"\n  ls -lh \"$OUTPUT_FILE\"\nelse\n  echo \"ERROR: Failed to create merged file\"\n  exit 1\nfi"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        3216,
+        -1088
+      ],
+      "id": "308c2b6b-b800-4407-9820-9a42c467de9d",
+      "name": "Execute Command"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "name, id",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2128,
+        -1072
+      ],
+      "id": "45879a72-aae0-4a51-9d89-c014611c937f",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "name"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        2272,
+        -1072
+      ],
+      "id": "81c1bd3a-a210-4a84-bdf6-d566c9098893",
+      "name": "Sort"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e373ece9-3c60-45fc-b89f-b380f7d574cb",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "array",
+                "operation": "lengthGt",
+                "rightType": "number"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1984,
+        -864
+      ],
+      "id": "5f6c4129-85a1-448d-958d-fb7d4f600027",
+      "name": "more videos?"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/creo/creoclone/{{$binary.data.fileName}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        2752,
+        -944
+      ],
+      "id": "66c4c312-c7ad-4a21-9c50-d48ea3ab0bc9",
+      "name": "save file disk1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2592,
+        -1072
+      ],
+      "id": "304ec6c0-d02a-4647-9a92-6ba3d8a4db08",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2752,
+        -1088
+      ],
+      "id": "fc05da55-63a2-4cce-bd55-2e590910b504",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        2912,
+        -1088
+      ],
+      "id": "d584ffe2-1f3a-4351-a302-231ed3c67578",
+      "name": "Limit2"
+    },
+    {
+      "parameters": {
+        "command": "ls -1 /home/node/.n8n/MainN8NFolders/creo/creoclone/*.wav | sort > /home/node/.n8n/MainN8NFolders/creo/Ready/filelist.txt && cat /home/node/.n8n/MainN8NFolders/creo/Ready/filelist.txt | sed 's/^/file /' > /home/node/.n8n/MainN8NFolders/creo/Ready/filelist_formatted.txt"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        3056,
+        -1088
+      ],
+      "id": "bb2f9759-833b-4f7f-9a7b-e444640f25b1",
+      "name": "Execute Command1"
+    },
+    {
+      "parameters": {
+        "fileSelector": "=/creo/Ready/merged.mp3",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        3376,
+        -1088
+      ],
+      "id": "ab628a82-c900-4a71-bbf3-0f698a417d03",
+      "name": "Read/Write Files from Disk8"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ $('Code13').first().json.candidates[0].content.parts[0].text }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        5184,
+        -880
+      ],
+      "id": "7643b46b-29be-4f5b-aaf2-b90efaa0cce4",
+      "name": "Update a document1",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "VUWDm1vrPg4jnpXy",
+          "name": "Google Docs account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Code13').first().json.candidates[0].content.parts[0].text }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=\n## Вы — профессиональный рекрутер и аналитик кадров, ваша задача — составлять краткую и структурированную выжимку по ключевым HR-моментам на основе текста транскрипции собеседования новых сотрудников. Ваш ответ всегда должен быть структурирован как чек-лист для HR-отдела и содержать исключительно самые важные моменты, без подробностей, воды и лишних пересказов.\n\n## Инструкция по обработке входного текста:\n\n- Проанализируй текст собеседования.\n\n\n- Сформируй краткую выжимку для HR по этим категориям (только если информация есть!):\n\n- Образование, компетенции и опыт кандидата\n- Мотивация и карьерные цели\n- Ключевые навыки (hard/soft skills)\n- Сильные стороны и риски\n- Заметные проявления коммуникации, поведения, стрессоустойчивости\n- Готовность к обучению, изменениям, командной работе\n- Вопросы кандидата работодателю/HR\n- Финальные итоги/заметки интервьюера (HR-конклюзия)\n\n## Требования к стилю:\n\n- Используй маркированные списки\n- Не пересказывай диалоги — выделяй исключительно суть\n- Не искажай факты, не дополняй от себя\n- Избегай субъективных оценок и лишних деталей\n\n## Если категория отсутствует — пропусти её, не добавляй пустые пункты\n\nПример формата результата:\n\nОбразование, опыт: …\n\nМотивация: …\n\nНавыки: …\n\nСильные стороны: …\n\nПоведение: …\n\nГотовность к обучению: …\n\nВопросы кандидата: …\n\nИтоги интервьюера: …"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        5872,
+        -880
+      ],
+      "id": "cb65be2a-16e5-42ae-b7da-70f8936be4aa",
+      "name": "HR Summary Agent1"
+    },
+    {
+      "parameters": {
+        "driveId": "sharedWithMe",
+        "folderId": "={{ $('Create folder candidate').first().json.id }}",
+        "title": "={{ $('On form submission').first().json['Выберите файл'].filename }}"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        5008,
+        -880
+      ],
+      "id": "7d1c27ac-3089-4106-a30e-c7f489e57c83",
+      "name": "Create a document text for transcribe1",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "VUWDm1vrPg4jnpXy",
+          "name": "Google Docs account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').last().json.message.chat.id }}",
+        "text": "=ФИО: {{ $('data candidate').first().json.data['ФИО'] }}\nДОЛЖНОСТЬ: {{ $('Filter1').item.json.name }}\nСТАТУС: {{ $json.output.status }}\nИНФОРМАЦИЯ: {{ $json.output.info }}\n\nСсылка на документ транскрибации: https://docs.google.com/document/d/{{ $('Update a document1').first().json.documentId }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        6496,
+        -768
+      ],
+      "id": "b3db51a2-c7e2-4df7-b2af-7c93b4477575",
+      "name": "Send a text message",
+      "webhookId": "2cd889cc-ed91-4789-bb5b-7d8291a7e994",
+      "credentials": {
+        "telegramApi": {
+          "id": "QQNR1PIxv7YePQqI",
+          "name": "hr"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "61c08b97-8342-407a-bb14-f01a1a421810",
+              "name": "gemini_file_url",
+              "value": "={{ $json.file.uri }}",
+              "type": "string"
+            },
+            {
+              "id": "1d7a5ec5-f1b0-4d79-b14d-b7514992dcbb",
+              "name": "mimeType",
+              "value": "={{ $json.file.mimeType }}",
+              "type": "string"
+            },
+            {
+              "id": "f72fdda7-b1fc-42a6-881e-2b1a5998b8ed",
+              "name": "prompt",
+              "value": "=\nТы — высокоточный транскрибатор, специализирующийся на расшифровке аудиозаписей HR-собеседований. Твоя задача — преобразовать аудио в текст с соблюдением следующих правил:\n\n## 🔹 Идентификация спикеров\n- Все реплики **HR-специалиста** помечай префиксом `[hr]:`  \n- Все реплики **кандидата** помечай префиксом `[кандидат]:`  \n- Если в записи участвует **более двух человек**, используй обозначения `[спикер 1]:`, `[спикер 2]:`, `[спикер 3]:` и т.д.  \n  - В начале транскрипции укажи краткое пояснение, например:  \n    `[спикер 1 = hr, спикер 2 = кандидат, спикер 3 = технический интервьюер]`\n\n## 🔹 Форматирование текста\n- Каждая реплика начинается **с новой строки**.  \n- Сохраняй оригинальную **пунктуацию**, **интонацию** и **стиль речи** (включая вопросы, восклицания и разговорные конструкции).  \n- Исправляй **только очевидные оговорки или опечатки**, если они мешают пониманию смысла.  \n- **Не перефразируй**, не добавляй от себя и не интерпретируй содержание.  \n- Избегай технических примечаний вроде `[неразборчиво]`, `[пауза]` или `[музыка]`, если только это критически не влияет на смысл.\n\n## 🔹 Цель транскрипции\nПолучить **чёткий, структурированный и легко читаемый диалог**, пригодный для:\n- Анализа soft/hard skills кандидата  \n- Оценки соответствия вакансии  \n- Обучения HR-специалистов  \n- Архивирования и юридической документации\n\n## 🔹 Пример ожидаемого вывода\n\n```\n[hr]: Приветствую, сегодня я буду тебя собеседовать. Меня зовут Максим, представься, пожалуйста.  \n[кандидат]: Здравствуйте, Максим. Меня зовут Олег. Буду проходить с вами собеседование на должность в вашей компании.\n```\n\n---\n\nТеперь обработай предоставленную аудиозапись в соответствии с этими требованиями.\n```",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4272,
+        -880
+      ],
+      "id": "27545c31-d52a-413f-abc3-13fb1df3a2ed",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4560,
+        -880
+      ],
+      "id": "5be3e331-2893-498e-9244-d944a5e4ee8c",
+      "name": "Wait6",
+      "webhookId": "11e6596c-1d3c-4d46-ab10-b0edc2125203"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyDHfClJ6gEH4vDikDhx3wFzO7Q1vh8ppIc"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json[\"body\"]) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4704,
+        -880
+      ],
+      "id": "36dcdb6c-c14e-4a43-8592-c8e257737e41",
+      "name": "Gemini Prompt",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/upload/v1beta/files",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyDHfClJ6gEH4vDikDhx3wFzO7Q1vh8ppIc"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Goog-Upload-Protocol",
+              "value": "resumable"
+            },
+            {
+              "name": "X-Goog-Upload-Command",
+              "value": "start"
+            },
+            {
+              "name": "X-Goog-Upload-Header-Content-Length",
+              "value": "={{ $json.size }}"
+            },
+            {
+              "name": "X-Goog-Upload-Header-Content-Type",
+              "value": "={{ $json.mimeType }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"file\": { \"display_name\": \"{{ $json.name }}\" } }",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "1e8acfca-9518-4284-a564-8f760b3e8e45",
+      "name": "Gemini Connect",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3840,
+        -880
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "49baa8c5-5649-4ad4-a5d3-484df0e3ca78",
+      "name": "Merge Binary & URL",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        4000,
+        -704
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "07f4c939-fb04-4190-aa36-3d49aed76a8a",
+      "name": "Keep Binary",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        3632,
+        -880
+      ],
+      "notesInFlow": true,
+      "func": "return [{\n  json: $json,\n  binary: $binary\n}];",
+      "notes": "Сохраняем бинарные данные для передачи дальше"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.headers['x-goog-upload-url'] }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyDHfClJ6gEH4vDikDhx3wFzO7Q1vh8ppIc"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Length",
+              "value": "={{ $json.size }}"
+            },
+            {
+              "name": "X-Goog-Upload-Offset",
+              "value": "0"
+            },
+            {
+              "name": "X-Goog-Upload-Command",
+              "value": "upload, finalize"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "=data",
+        "options": {}
+      },
+      "id": "767ddaf9-855b-4a6c-bb25-2aac5ffaf74f",
+      "name": "Gemini Upload",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4128,
+        -880
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code-нода: items — это входной массив\nreturn items.map(item => {\n  const prompt   = item.json.prompt;\n  const mimeType = item.json.mimeType;\n  const fileUri  = item.json.gemini_file_url;\n\n  // добавляем в json новое поле body\n  item.json.body = {\n    contents: [\n      {\n        parts: [\n          { text: prompt },\n          {\n            file_data: {\n              mime_type: mimeType,\n              file_uri:  fileUri,\n            },\n          },\n        ],\n      },\n    ],\n  };\n\n  return item;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4416,
+        -880
+      ],
+      "id": "1c68cc5e-61d3-4122-a975-238453f9fa42",
+      "name": "Code12"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Простой парсер для извлечения JSON из Gemini ответа\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  try {\n    // Извлекаем text из Gemini структуры\n    const geminiText = item.json.candidates[0].content.parts[0].text;\n    \n    console.log('Raw Gemini text:', geminiText);\n    \n    // Убираем все markdown блоки и лишние символы\n    let cleanJson = geminiText\n      .replace(/```json/g, '')  // убираем ```json\n      .replace(/```/g, '')      // убираем ```\n      .replace(/^\\s*[\\r\\n]/gm, '') // убираем пустые строки\n      .trim();                  // убираем пробелы по краям\n    \n    console.log('Cleaned JSON:', cleanJson);\n    \n    // Парсим JSON\n    const parsed = JSON.parse(cleanJson);\n    \n    console.log('Parsed result:', parsed);\n    \n    // Возвращаем результат\n    results.push({\n      json: {\n        ...item.json,\n        lipsync_result: parsed,\n        // Удобные поля для использования\n        is_suitable: parsed.suitable_for_lipsync,\n        has_defect: !parsed.suitable_for_lipsync,\n        defect_type: parsed.critical_defect,\n        defect_info: parsed.defect_description\n      },\n      binary: item.binary || {}\n    });\n    \n  } catch (error) {\n    console.error('Parse error:', error.message);\n    \n    results.push({\n      json: {\n        ...item.json,\n        error: error.message,\n        lipsync_result: {\n          suitable_for_lipsync: false,\n          critical_defect: \"Ошибка парсинга\",\n          defect_description: error.message\n        },\n        is_suitable: false,\n        has_defect: true\n      },\n      binary: item.binary || {}\n    });\n  }\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4848,
+        -880
+      ],
+      "id": "24cca692-6897-4efa-93c1-6f9b93bec14e",
+      "name": "Code13"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Ocw03_LcHJ-PJltWo3-RIlnYvDE__79vCdG0IkHqygM",
+          "mode": "list",
+          "cachedResultName": "logs_taskhr",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ocw03_LcHJ-PJltWo3-RIlnYvDE__79vCdG0IkHqygM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Лист1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ocw03_LcHJ-PJltWo3-RIlnYvDE__79vCdG0IkHqygM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ $('On form submission').first().json.email }}",
+            "url doc": "=https://docs.google.com/document/d/{{ $('Create a document text for transcribe').first().json.id }}",
+            "data": "={{ $('formatting time').first().json.formatted }}",
+            "stauts": "={{ $json.output.status }}",
+            "info": "={{ $json.output.info }}"
+          },
+          "matchingColumns": [
+            "email"
+          ],
+          "schema": [
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "url doc",
+              "displayName": "url doc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "stauts",
+              "displayName": "stauts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "info",
+              "displayName": "info",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        6496,
+        -928
+      ],
+      "id": "236d832e-64bc-4a4b-996a-3a26ebf5349f",
+      "name": "update logs1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "t7tuKutwJr2Aya2G",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.from.id }}",
+        "text": "🤖 Не смог найти файлы. Попробуйте повторить",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1456,
+        -496
+      ],
+      "id": "e342583c-5c33-49aa-a7d6-f08c6e2ae77e",
+      "name": "text \" no file\"",
+      "webhookId": "f051ff8e-02d9-4426-b6c8-3207062a8c5d",
+      "credentials": {
+        "telegramApi": {
+          "id": "QQNR1PIxv7YePQqI",
+          "name": "hr"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('id file valid?').first().json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2144,
+        -672
+      ],
+      "id": "b2cb7291-624a-4c3d-b754-218065ab7f42",
+      "name": "Download file2",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "RQPytk6CITxF8zOj",
+          "name": "Google Drive account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "eae9902e-ba94-430b-8740-be6eeda0a4ef",
+              "leftValue": "={{ $('search file in folders').first().json.mimeType }}",
+              "rightValue": "audio",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1648,
+        -736
+      ],
+      "id": "3c4ab439-6c69-4b42-8f47-19144ae08fdc",
+      "name": "it's audio?"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        -864
+      ],
+      "id": "a4679359-69d2-4352-bc69-093d177ba1a0",
+      "name": "Wait3",
+      "webhookId": "c4d21c93-b99d-4744-b865-e276f53e1803"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "🤖 Начинаю анализ, ожидайте результат.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        768,
+        -656
+      ],
+      "id": "94122f3e-b134-41e4-85e1-bbf467934e0a",
+      "name": "text about start process1",
+      "webhookId": "844e3cf8-84c2-40b1-b5e6-70230d19f299",
+      "credentials": {
+        "telegramApi": {
+          "id": "QQNR1PIxv7YePQqI",
+          "name": "hr"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/creo/creoclone/{{$binary.data.fileName}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        2752,
+        -672
+      ],
+      "id": "d0441fff-6442-45b2-b800-6c086817cf72",
+      "name": "save file disk2"
+    },
+    {
+      "parameters": {
+        "fileSelector": "=/creo/creoclone/{{$binary.data.fileName}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        3392,
+        -672
+      ],
+      "id": "b1d813b1-366f-4452-a1ef-bf2b86f51e88",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=## Ты — профессиональный HR-аналитик, принимающий решение о приеме кандидата на работу на основе структурированной информации с собеседования.\n\nНа входе у тебя будет текстовая выжимка, составленная предыдущим агентом, содержащая основные моменты (образование, мотивация, навыки, сильные стороны и риски, поведение, готовность к обучению, вопросы кандидата, финальные итоги интервьюера).\n\n## Твоя задача:\n\n- Проанализировать полученную информацию\n- Сформулировать четкий вердикт\n- Вернуть ответ в строгом JSON-формате\n\n## Должность кандидата: \n- {{ $('Filter1').item.json.name }}\n\n## ОБРАЩАЙСЯ К TOOLS ПО ДОЛЖНОСТЯМ ДЛЯ ЧЕТКОГО АНАЛИЗА:\n- data_candidate\n\n\n\n## Формат вывода (JSON):\n\n{\n  \"status\": \"рекомендую\" | \"не рекомендую\" | \"отправить менеджеру\",\n  \"info\": \"краткое пояснение решения\"\n}\n\nВозможные значения status:\n- \"рекомендую\" — кандидат подходит для приема на работу\n- \"не рекомендую\" — кандидат не подходит\n- \"отправить менеджеру\" — требуется дополнительное собеседование или недостаточно данных\n\n## Требования:\n\n- Основывайся только на информации из предоставленного текста\n- Не дополняй выводы или причины от себя\n- Будь объективен, избегай \"эмоций\" и субъективных оценок\n- Пояснение (info) должно быть кратким: 1-3 предложения, без пересказов и воды\n\nЕсли данных недостаточно для вердикта, верни:\n{\n  \"status\": \"отправить менеджеру\",\n  \"info\": \"Недостаточно информации для принятия решения\"\n}\n\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        6144,
+        -880
+      ],
+      "id": "1696d84a-b139-4397-9089-0f0ebd8e1b74",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "=",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1Y3VqLP7_pM07VeE-PUvBDIWPRXIu5Ckn",
+            "mode": "id"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        5360,
+        -880
+      ],
+      "id": "914825a1-2cd4-4512-b227-090e6b578a49",
+      "name": "search file in folders1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "RQPytk6CITxF8zOj",
+          "name": "Google Drive account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "id"
+            },
+            {
+              "fieldName": "name"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        5536,
+        -880
+      ],
+      "id": "9de26eaf-bfd5-4704-ab3a-84c414638c30",
+      "name": "Sort1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1030d86a-1007-4f3a-83f9-b0b42b031c59",
+              "leftValue": "={{ $('data candidate').last().json.data['должность'] }}",
+              "rightValue": "={{ $json.name }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        5696,
+        -880
+      ],
+      "id": "9e880507-fe4d-4707-9fff-b5d016d25763",
+      "name": "Filter1"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "={{ $('Filter1').first().json.id }}",
+        "simple": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Simplify', ``, 'boolean') }}"
+      },
+      "type": "n8n-nodes-base.googleDocsTool",
+      "typeVersion": 2,
+      "position": [
+        6256,
+        -672
+      ],
+      "id": "06fbfa1c-8cba-4bcc-834a-9b837c3fe291",
+      "name": "data_candidate",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "VUWDm1vrPg4jnpXy",
+          "name": "Google Docs account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        5872,
+        -672
+      ],
+      "id": "9cfda899-0352-432e-96ce-f6d00c52f46f",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "GegghThdYivfsxsx",
+          "name": "my key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"status\": \"рекомендую, не рекомендую, отправить менеджеру\",\n  \"info\": \"краткое пояснение решения\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        6384,
+        -672
+      ],
+      "id": "f1f14700-5abe-4d0a-a8e9-472c7ed04cb5",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        6112,
+        -672
+      ],
+      "id": "6f05be22-c1e7-4588-a710-0d9bf88a0bde",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "GegghThdYivfsxsx",
+          "name": "my key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "=🛡️ Проверка верификации",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1072,
+        -1056
+      ],
+      "id": "c5f5351d-4e81-4de5-8d89-34f2e8aa484f",
+      "name": "check verifactions",
+      "webhookId": "35301af4-9a6e-4cff-9d83-6c7c5fe7c76a",
+      "credentials": {
+        "telegramApi": {
+          "id": "QQNR1PIxv7YePQqI",
+          "name": "hr"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=❌ Верификация не прошла",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -896,
+        -848
+      ],
+      "id": "ff591566-05f8-4d56-80ba-4c5eff4e7184",
+      "name": "fail verification",
+      "webhookId": "1d35dbdb-a8ba-4095-b2fb-1d78b1791f6f",
+      "credentials": {
+        "telegramApi": {
+          "id": "QQNR1PIxv7YePQqI",
+          "name": "hr"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "✅ Верификация прошла успешно",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -512,
+        -1072
+      ],
+      "id": "149787f4-8ccc-47bb-8cb5-2d1036fe9ffd",
+      "name": "good verification",
+      "webhookId": "5c3fedd5-0b92-4c5a-8b93-7591d4374aa2",
+      "credentials": {
+        "telegramApi": {
+          "id": "QQNR1PIxv7YePQqI",
+          "name": "hr"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Получаем e-mail из входящих данных\nconst email = $('valid main?').first().json.Mail\n\n// Обрезаем все после и включая @\nconst nickname = email.split('@')[0];\n\n// Возвращаем результат\nreturn [\n  {\n    json: {\n      nickname,\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        -1072
+      ],
+      "id": "7121e43d-e4c6-4eb9-a0ab-027d1d966c1e",
+      "name": "split email"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "={{ $('Telegram Trigger').first().json.message.from.id }}",
+        "message": "=📋 Заполните данные кандидата\nПример:  \n👤 ФИО: Иванов Иван Иванович  \n💼 Должность: Разработчик\n",
+        "responseType": "customForm",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "ФИО",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "должность",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "AI Product Manager"
+                  },
+                  {
+                    "option": "Дизайнер"
+                  },
+                  {
+                    "option": "Видеомонтажер"
+                  },
+                  {
+                    "option": "Аналитик"
+                  },
+                  {
+                    "option": "QC"
+                  },
+                  {
+                    "option": "MEDIA BUYER"
+                  },
+                  {
+                    "option": "Маркетинговый аналитик"
+                  },
+                  {
+                    "option": "PROMPT ENGINEER"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {
+          "messageButtonLabel": "Заполнить данные",
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        -1072
+      ],
+      "id": "70566724-9050-479d-bd9e-c0bf4d0fa378",
+      "name": "data candidate",
+      "webhookId": "dcb66d72-0a5c-4ab5-be9d-2ff4d23322de",
+      "credentials": {
+        "telegramApi": {
+          "id": "QQNR1PIxv7YePQqI",
+          "name": "hr"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.from.id }}",
+        "text": "=📂 Пожалуйста, загрузите файлы в папку Google Drive\n\n",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Ссылка на загрузку",
+                    "additionalFields": {
+                      "url": "=https://drive.google.com/drive/u/2/folders/{{ $json.id }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        -864
+      ],
+      "id": "390f4b3b-7ab9-4921-ac0b-3381c78c6831",
+      "name": "update files candidate",
+      "webhookId": "92584882-9815-4e31-bcd3-8462aec2a5ab",
+      "credentials": {
+        "telegramApi": {
+          "id": "QQNR1PIxv7YePQqI",
+          "name": "hr"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteMessage",
+        "chatId": "={{ $json.result.chat.id }}",
+        "messageId": "={{ $('check verifactions').item.json.result.message_id }}, {{ $json.result.message_id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -320,
+        -1072
+      ],
+      "id": "57b29a68-ee18-4f27-8d95-dc76db3791f3",
+      "name": "Delete a chat message",
+      "webhookId": "9092dfd9-03d2-4a3c-b2c9-494b1271533b",
+      "credentials": {
+        "telegramApi": {
+          "id": "QQNR1PIxv7YePQqI",
+          "name": "hr"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteMessage",
+        "chatId": "={{ $('update files candidate').item.json.result.chat.id }}",
+        "messageId": "={{ $('update files candidate').item.json.result.message_id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        576,
+        -656
+      ],
+      "id": "3deaf18e-d8a9-4bd9-a4fd-5317787e4dd9",
+      "name": "delete text load file",
+      "webhookId": "5140c17b-7bb3-4da7-bc89-01d3fc4f3e6b",
+      "credentials": {
+        "telegramApi": {
+          "id": "QQNR1PIxv7YePQqI",
+          "name": "hr"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request18": {
+      "main": [
+        [
+          {
+            "node": "valid main?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "check verifactions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "clear": {
+      "main": [
+        [
+          {
+            "node": "search file in folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "serarch folders nickname1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create folder for nickname1": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search folders nicnname1": {
+      "main": [
+        [
+          {
+            "node": "valid folder?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "serarch folders nickname1": {
+      "main": [
+        [
+          {
+            "node": "valid folder?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create folder candidate": {
+      "main": [
+        [
+          {
+            "node": "update files candidate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "clear",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search file in folders": {
+      "main": [
+        [
+          {
+            "node": "id file valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "id file valid?": {
+      "main": [
+        [
+          {
+            "node": "it's audio?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "text \" no file\"",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "add file google drive": {
+      "main": [
+        [
+          {
+            "node": "delete text load file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "valid folder?": {
+      "main": [
+        [
+          {
+            "node": "data candidate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "create folder for nickname1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "valid main?": {
+      "main": [
+        [
+          {
+            "node": "good verification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "fail verification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sorting id video list": {
+      "main": [
+        [
+          {
+            "node": "more videos?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Download file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "more videos?": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download file2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save file disk1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "save file disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "Limit2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit2": {
+      "main": [
+        [
+          {
+            "node": "Execute Command1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command1": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk8": {
+      "main": [
+        [
+          {
+            "node": "Keep Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a document1": {
+      "main": [
+        [
+          {
+            "node": "search file in folders1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HR Summary Agent1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a document text for transcribe1": {
+      "main": [
+        [
+          {
+            "node": "Update a document1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait6": {
+      "main": [
+        [
+          {
+            "node": "Gemini Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Prompt": {
+      "main": [
+        [
+          {
+            "node": "Code13",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Connect": {
+      "main": [
+        [
+          {
+            "node": "Merge Binary & URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Binary & URL": {
+      "main": [
+        [
+          {
+            "node": "Gemini Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keep Binary": {
+      "main": [
+        [
+          {
+            "node": "Gemini Connect",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Binary & URL",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Gemini Upload": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code12": {
+      "main": [
+        [
+          {
+            "node": "Wait6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code13": {
+      "main": [
+        [
+          {
+            "node": "Create a document text for transcribe1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "text \" no file\"": {
+      "main": [
+        []
+      ]
+    },
+    "Download file2": {
+      "main": [
+        [
+          {
+            "node": "save file disk2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "it's audio?": {
+      "main": [
+        [
+          {
+            "node": "sorting id video list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait3": {
+      "main": [
+        [
+          {
+            "node": "add file google drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "text about start process1": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save file disk2": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Keep Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "update logs1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search file in folders1": {
+      "main": [
+        [
+          {
+            "node": "Sort1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort1": {
+      "main": [
+        [
+          {
+            "node": "Filter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter1": {
+      "main": [
+        [
+          {
+            "node": "HR Summary Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "data_candidate": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "HR Summary Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check verifactions": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request18",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "good verification": {
+      "main": [
+        [
+          {
+            "node": "Delete a chat message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split email": {
+      "main": [
+        [
+          {
+            "node": "search folders nicnname1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "data candidate": {
+      "main": [
+        [
+          {
+            "node": "Create folder candidate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update files candidate": {
+      "main": [
+        [
+          {
+            "node": "Wait3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a chat message": {
+      "main": [
+        [
+          {
+            "node": "split email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete text load file": {
+      "main": [
+        [
+          {
+            "node": "text about start process1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "23888543ab7fca46124b3e59a5fa4e4f62802ef7d2ac315b4a55ba8970d3f6ec"
+  }
+}
