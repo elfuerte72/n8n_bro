@@ -1,0 +1,1785 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "toolDescription": "Анализирует веб-сайты для определения индустрии и геолокации компании. Сканирует содержимое сайта, контакты, разделы \"О компании\" и другие страницы чтобы точно определить сферу деятельности и местонахождение организации. Возвращает структурированную информацию об отрасли и географическом положении.",
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"perplexity/sonar\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $('If').item.json.referenced }}\"\n    }\n  ],\n  \"temperature\": 0.1\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        2176,
+        1312
+      ],
+      "id": "7045f718-b925-439b-a990-6fee2eafda70",
+      "name": "Perplexity: Sonar"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Получаем текст сообщения из Telegram триггера\nconst input = $input.first().json.message.text;\n\n// Регулярное выражение для поиска URL\nconst urlRegex = /(https?:\\/\\/[^\\s]+)/;\nconst match = input.match(urlRegex);\n\n// Возвращаем результат\nreturn {\n  referenced: match ? match[0] : \"\",\n  hasUrl: !!match,\n  originalMessage: input, // Добавляем оригинальное сообщение для отладки\n  telegramData: {\n    chatId: $input.first().json.message.chat.id,\n    messageId: $input.first().json.message.message_id,\n    userId: $input.first().json.message.from.id,\n    username: $input.first().json.message.from.username || \"unknown\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1776,
+        1024
+      ],
+      "id": "2f2669e4-acc5-4c26-8f5a-e489837fa4f9",
+      "name": "url stripe"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.referenced }}\n\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=Ты — эксперт по анализу бизнес-моделей с 10-летним опытом категоризации компаний.\n\nЗАДАЧА: Определить ОСНОВНУЮ индустрию компании по веб-сайту за ОДИН анализ.\n\n## АЛГОРИТМ АНАЛИЗА:\n\n### ШАГ 1: ПОИСК КЛЮЧЕВЫХ МАРКЕРОВ\nСканируй в ПРИОРИТЕТНОМ порядке:\n- Hero-секцию (главный заголовок + описание)\n- Раздел \"Services\" / \"Products\" / \"What We Do\"\n- About Us (первые 2 абзаца)\n- Portfolio / Case Studies (если есть)\n\n### ШАГ 2: ПРИМЕНЕНИЕ DECISION TREE\n\n**ПЕРВИЧНАЯ КАТЕГОРИЗАЦИЯ** (ответь ДА/НЕТ):\n- Продают физические товары? → E-commerce/Manufacturing\n- Разрабатывают ПО/приложения? → Technology\n- Оказывают профессиональные услуги бизнесу? → Business Services\n- Работают с недвижимостью? → Real Estate\n- Медицинские услуги? → Healthcare\n- Образовательные услуги? → Education\n- Строят/проектируют? → Construction\n- Финансовые услуги? → Finance\n\n### ШАГ 3: ТОЧНАЯ КАТЕГОРИЗАЦИЯ\n\n#### 💻 TECHNOLOGY:\n**Маркеры:** \"app development\", \"software solution\", \"SaaS\", \"digital transformation\", \"AI\", \"cybersecurity\"\n- Web Development & Digital Agency\n- SaaS Product  \n- Mobile App Development\n- Cybersecurity Services\n- AI/ML Solutions\n- IT Services/Consulting\n\n#### 💼 BUSINESS SERVICES:\n**Маркеры:** \"consulting\", \"strategy\", \"HR\", \"marketing agency\", \"accounting\", \"legal\"\n- Management Consulting\n- Marketing & Advertising Agency\n- HR & Recruitment\n- Accounting Services\n- Legal Services\n\n#### 🏗️ CONSTRUCTION & ENGINEERING:\n**Маркеры:** \"construction\", \"building\", \"architecture\", \"engineering\", \"contractor\"\n- Residential Construction\n- Commercial Construction\n- Architecture & Design\n- Civil Engineering\n\n#### 🛒 E-COMMERCE & RETAIL:\n**Маркеры:** \"shop\", \"store\", \"buy now\", \"products catalog\", \"e-commerce\"\n- Online Store\n- Fashion Retail\n- Electronics Retail\n- Marketplace Platform\n\n#### 🏥 HEALTHCARE:\n**Маркеры:** \"medical\", \"clinic\", \"doctor\", \"health\", \"treatment\", \"telemedicine\"\n- Medical Clinic\n- Dental Services\n- Telemedicine\n- Medical Equipment\n\n[... остальные категории по аналогии]\n\n## ПРАВИЛА ОПРЕДЕЛЕНИЯ:\n\n1. **Rule of Primary Revenue**: Что приносит основной доход?\n2. **Rule of Client Focus**: B2B или B2C в первую очередь?\n3. **Rule of Core Competency**: Какая основная экспертиза?\n\n## EDGE CASES:\n- Если несколько направлений → выбери то, которое **первым упоминается** в hero-секции\n- Если агентство → смотри на **специализацию** (digital, PR, creative)\n- Если консалтинг → определи **нишу** (IT, management, financial)\n\nФОРМАТ ОТВЕТА (только JSON):\n```json\n{\n  \"url\": \"[URL]\",\n  \"company_name\": \"[официальное название]\",\n  \"industry\": \"[точная категория]\",\n  \"industry_reasoning\": \"[почему выбрана эта категория - 1 предложение]\",\n  \"primary_markers\": [\"маркер1\", \"маркер2\", \"маркер3\"],\n  \"region\": \"[страна, город]\",\n  \"company_size\": \"startup/smb/enterprise\",\n  \"youtube\": \"[ссылка или null]\",\n  \"confidence\": \"high/medium/low\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2096,
+        1008
+      ],
+      "id": "709c10fd-b3eb-4ac8-9b5a-44f60b650e4e",
+      "name": "url analizator"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b7f4f4d1-b0fa-4f73-8b22-4375596c3128",
+              "leftValue": "={{ $json.referenced }}",
+              "rightValue": "https:",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        1024
+      ],
+      "id": "fc9f8a0d-8064-495c-8ec9-832a8e5bca70",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=- URL: {{ $json.output.url }}\n- Индустрия: {{ $json.output.industry }}\n- Регион: {{ $json.output.region }}\n- Дополнительная информая об индустрии: {{ $json.output.industry_info }}\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=Ты — эксперт по конкурентному анализу с фокусом на ПРЯМЫХ конкурентах.\n\n\n\nОПРЕДЕЛЕНИЕ ПРЯМОГО КОНКУРЕНТА:\n✅ ПРЯМОЙ конкурент это компания которая:\n- Предлагает ИДЕНТИЧНЫЕ продукты/услуги\n- Работает с ТЕМ ЖЕ целевым сегментом клиентов\n- Имеет СХОЖИЙ размер (±50% по обороту/сотрудникам)\n- Находится в ТОЙ ЖЕ географической зоне (для локального бизнеса)\n- Использует АНАЛОГИЧНУЮ бизнес-модель\n\n❌ НЕ являются прямыми конкурентами:\n- Компании из смежных индустрий\n- Компании с другой бизнес-моделью\n- Слишком крупные/мелкие компании (разница >50%)\n- Компании с другой целевой аудиторией\n- Сама анализируемая компания\n\nВХОДНЫЕ ДАННЫЕ:\n- Компания: {{ $json.output.company_name }}\n- Индустрия: {{ $json.output.industry }}\n- Дополнительная информация об индустрии: {{ $json.output.industry_info }}\n- Регион: {{ $json.output.region }}\n\nКРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА:\n1. НИКОГДА не включай в список конкурентов саму анализируемую компанию {{ $json.output.company_name }}\n2. Если найдена компания с URL {{ $json.output.url }} - это исходная компания, ИСКЛЮЧИ её\n3. Проверяй каждого конкурента: это действительно ПРЯМОЙ конкурент, а не смежный бизнес?\n\nАЛГОРИТМ ПОИСКА:\n1. Сформируй поисковый запрос: \"[индустрия] companies in [регион] similar to [компания]\"\n2. Отфильтруй результаты по размеру компании\n3. Исключи саму анализируемую компанию\n4. Проверь каждого кандидата на соответствие критериям ПРЯМОГО конкурента\n5. Если найдено <15 прямых конкурентов, расширь географию поиска\n\nВАЛИДАЦИЯ (для каждого конкурента):\n- Объясни ПОЧЕМУ это прямой конкурент (1-2 предложения)\n- Укажи % схожести бизнес-модели (0-100%)\n\nПРИОРИТЕТ ОТБОРА:\n1. Локальные компании того же размера\n2. Региональные компании схожего профиля  \n3. Национальные игроки с локальным присутствием\n4. Международные компании ТОЛЬКО если нет локальных\n\nФОРМАТ ОТВЕТА (строго JSON):\n```json\n{\n  \"original_company\": {\n    \"url\": \"[URL]\",\n    \"industry\": \"[индустрия]\",\n    \"region\": \"[регион]\",\n    \"size\": \"[размер]\"\n  },\n  \"competitors\": [\n    {\n      \"name\": \"[название]\",\n      \"url\": \"[сайт]\",\n      \"description\": \"[чем занимается]\",\n      \"size\": \"startup/smb/enterprise\",\n      \"region\": \"[страна/город]\",\n      \"similarity_score\": 85,\n      \"why_competitor\": \"Прямой конкурент: [причина]\"\n    }\n  ],\n  \"total_found\": 15\n}\nОБЯЗАТЕЛЬНО: Найди ровно 15 ПРЯМЫХ конкурентов. Если прямых конкурентов меньше, укажи это явно."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2416,
+        1008
+      ],
+      "id": "1ef489dc-13fc-41e3-849b-7a62f7a20e64",
+      "name": "Competitor Research"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Анализирует веб-сайты для определения индустрии и геолокации компании. Сканирует содержимое сайта, контакты, разделы \"О компании\" и другие страницы чтобы точно определить сферу деятельности и местонахождение организации. Возвращает структурированную информацию об отрасли и географическом положении.",
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"perplexity/sonar\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Найди 15 компаний-конкурентов для компании {{ $json.output.company_name }} ({{ $json.output.url }}) в индустрии {{ $json.output.industry }} в регионе {{ $json.output.region }}.\\n\\nТребования:\\n- ТОЛЬКО прямые конкуренты с идентичной бизнес-моделью\\n- Активные компании с работающими сайтами\\n- ИСКЛЮЧИ из списка: {{ $json.output.company_name }} ({{ $json.output.url }})\\n\\nДля каждой компании укажи:\\n1. Название и веб-сайт\\n2. Краткое описание деятельности (1-2 предложения)\\n3. Размер бизнеса (startup/smb/enterprise)\\n4. Географическое расположение\\n5. Почему это прямой конкурент\\n\\nПриоритет поиска:\\n1. Локальные компании в {{ $json.output.region }}\\n2. Региональные компании того же профиля\\n3. Национальные игроки с локальным присутствием\\n\\nФормат ответа: список из 15 компаний с указанными параметрами.\"\n    }\n  ],\n  \"temperature\": 0.1\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        2512,
+        1328
+      ],
+      "id": "14fdff37-546b-46ef-b83f-c47a1ceeb943",
+      "name": "Perplexity: Sonar1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Фильтруем только те items, где есть videos\nconst filteredItems = $input.all().filter(item => {\n  // Проверяем разные поля в зависимости от структуры данных\n  return item.json.videos || \n         item.json.youtubeChannelFound || \n         (item.json.videos && item.json.videos.length > 0);\n});\n\nreturn filteredItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3936,
+        688
+      ],
+      "id": "ee24953a-3cd6-421c-8995-f8223fe7dd48",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "*"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        1632,
+        1024
+      ],
+      "id": "ebda1ad2-3053-4a81-a924-ac07e858a0bd",
+      "name": "Telegram Trigger",
+      "webhookId": "c398e69d-0af0-4723-983f-e3870837e334"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "={{ $json.message_text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4624,
+        480
+      ],
+      "id": "277f7f53-02b5-444c-936e-9ba20f45a33f",
+      "name": "Send a text message",
+      "webhookId": "9c33889b-ea40-46fa-bb03-73cf55c72cd2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "58a0cc65-56db-4ca9-ae39-9353e0dd13b9",
+              "leftValue": "={{ $json.character_count }}",
+              "rightValue": 4096,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4416,
+        608
+      ],
+      "id": "f5aad3f9-6b7d-46f8-b832-64d3673ffdbe",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Получаем данные из предыдущей ноды\nconst inputData = $input.first().json;\nconst fullText = $input.first().json.message_text\nconst maxLength = 4096; // Лимит Telegram\n\n// Функция для разделения текста на части\nfunction splitTextIntoChunks(text, maxLength) {\n  const chunks = [];\n  let currentChunk = '';\n  const lines = text.split('\\n');\n  \n  for (const line of lines) {\n    // Проверяем, поместится ли строка в текущий chunk\n    if ((currentChunk + line + '\\n').length <= maxLength) {\n      currentChunk += line + '\\n';\n    } else {\n      // Если текущий chunk не пустой, добавляем его в массив\n      if (currentChunk.trim()) {\n        chunks.push(currentChunk.trim());\n      }\n      \n      // Проверяем, не превышает ли одна строка лимит\n      if (line.length > maxLength) {\n        // Разбиваем длинную строку на части\n        let remainingLine = line;\n        while (remainingLine.length > maxLength) {\n          chunks.push(remainingLine.substring(0, maxLength));\n          remainingLine = remainingLine.substring(maxLength);\n        }\n        currentChunk = remainingLine ? remainingLine + '\\n' : '';\n      } else {\n        currentChunk = line + '\\n';\n      }\n    }\n  }\n  \n  // Добавляем последний chunk, если он не пустой\n  if (currentChunk.trim()) {\n    chunks.push(currentChunk.trim());\n  }\n  \n  return chunks;\n}\n\n// Разделяем текст на части\nconst textChunks = splitTextIntoChunks(fullText, maxLength);\n\n// Создаем массив объектов для каждой части\nconst outputItems = textChunks.map((chunk, index) => ({\n  json: {\n    message_text: chunk,\n    part_number: index + 1,\n    total_parts: textChunks.length,\n    character_count: chunk.length,\n    is_last_part: index === textChunks.length - 1,\n    original_total_characters: inputData.total_characters,\n    companies_count: inputData.companies_count,\n    timestamp: inputData.timestamp,\n    // Добавляем заголовок для каждой части (кроме первой)\n    message_with_header: index > 0 \n      ? `📄 Часть ${index + 1}/${textChunks.length}\\n\\n${chunk}`\n      : chunk\n  }\n}));\n\n// Возвращаем массив элементов\nreturn outputItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4608,
+        704
+      ],
+      "id": "a70f8272-84d9-4395-8b42-1b4715227705",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        4784,
+        704
+      ],
+      "id": "705aff5f-2980-46ea-a904-7348b1a53c0a",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "={{ $json.message_text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        5120,
+        784
+      ],
+      "id": "43680432-a7dd-4d7e-a7d5-93458dd967c0",
+      "name": "Send a text message1",
+      "webhookId": "9c33889b-ea40-46fa-bb03-73cf55c72cd2"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"url\": \"https://example.com\",\n  \"industry\": \"Technology/Software\",\n   \"industry_info\": \"Cybersecurity Services\",\n  \"company_name\": \"example\",\n  \"region\": \"USA, California\",\n  \"youtube\": \"https://youtube.com/channel/UCxxxxx\",\n  \"confidence\": \"high\"\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2080,
+        1200
+      ],
+      "id": "618f6745-4923-4f7c-b6b6-774b0ad85578",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"original_company\": {\n    \"url\": \"https://www.cmolds.com/\",\n    \"company_name\": \"CMOLDS\",\n    \"industry\": \"Technology/Software\",\n    \"region\": \"UAE, Dubai\",\n    \"size\": \"smb\"\n  },\n  \"competitors\": [\n    {\n      \"name\": \"Appinventiv\",\n      \"url\": \"https://appinventiv.com\",\n      \"description\": \"Mobile app and software development company\",\n      \"size\": \"enterprise\",\n      \"region\": \"UAE, Dubai\",\n      \"similarity_score\": 85,\n      \"why_competitor\": \"Direct competitor offering identical mobile app development services in the same region\"\n    },\n    {\n      \"name\": \"TechGropse\",\n      \"url\": \"https://www.techgropse.com\",\n      \"description\": \"Mobile app development and IT consulting\",\n      \"size\": \"smb\",\n      \"region\": \"UAE, Dubai\",\n      \"similarity_score\": 90,\n      \"why_competitor\": \"Same size company providing mobile development services to similar client base\"\n    }\n  ],\n  \"total_found\": 15\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2416,
+        1200
+      ],
+      "id": "318e6834-a32e-4d43-8304-ac1c35d20084",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "model": "google/gemini-2.5-pro",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        2496,
+        784
+      ],
+      "id": "6e301461-b811-4a4a-a90b-dc9d7eedc0e8",
+      "name": "gpt4.1 mini"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4976,
+        784
+      ],
+      "id": "181d2827-3960-42d2-906d-4ad81e8ebbbc",
+      "name": "Wait3",
+      "webhookId": "5bd5e788-66b0-452c-abb0-f0257a4060a7"
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2896,
+        1008
+      ],
+      "id": "df129d44-6b89-4c26-b3d1-370e78e4e7c3",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Функция для извлечения главной страницы из URL\nfunction extractMainDomain(url) {\n  try {\n    // Убираем протокол и www\n    let cleanUrl = url.replace(/^https?:\\/\\//, '').replace(/^www\\./, '');\n    \n    // Извлекаем только домен (до первого слэша)\n    let domain = cleanUrl.split('/')[0];\n    \n    // Возвращаем с https://\n    return `https://${domain}`;\n  } catch (error) {\n    return url; // Возвращаем оригинальный URL если что-то пошло не так\n  }\n}\n\n// Функция для нормализации размера компании\nfunction normalizeCompanySize(size) {\n  const sizeStr = size.toLowerCase();\n  if (sizeStr.includes('startup') || sizeStr.includes('51-200')) return 'startup';\n  if (sizeStr.includes('enterprise') || sizeStr.includes('large')) return 'enterprise';\n  return 'smb';\n}\n\n// Получаем данные от AI Agent\nconst data = $input.first().json.output;\n\n// Нормализуем URL оригинальной компании\nconst originalCompany = {\n  ...data.original_company,\n  url: extractMainDomain(data.original_company.url),\n  size_category: normalizeCompanySize(data.original_company.size || 'smb')\n};\n\n// Обрабатываем и нормализуем данные конкурентов\nconst processedCompetitors = data.competitors.map(competitor => ({\n  ...competitor,\n  url: extractMainDomain(competitor.url),\n  size_category: normalizeCompanySize(competitor.size || 'smb'),\n  competitor_id: competitor.name.toLowerCase().replace(/[^a-z0-9]/g, '-')\n}));\n\n// Сортируем конкурентов по similarity_score (от высокого к низкому)\nprocessedCompetitors.sort((a, b) => (b.similarity_score || 0) - (a.similarity_score || 0));\n\n// Создаем отдельные items для каждого конкурента\nconst items = processedCompetitors.map((competitor, index) => ({\n  json: {\n    // Основные данные конкурента\n    competitor_name: competitor.name,\n    competitor_url: competitor.url,\n    competitor_description: competitor.description,\n    competitor_size: competitor.size,\n    competitor_size_category: competitor.size_category,\n    competitor_region: competitor.region,\n    similarity_score: competitor.similarity_score || 0,\n    why_competitor: competitor.why_competitor,\n    competitor_id: competitor.competitor_id,\n    \n    // Ранжирование по релевантности\n    rank: index + 1,\n    priority: index < 5 ? 'high' : index < 10 ? 'medium' : 'low',\n    \n    // Контекст оригинальной компании\n    original_company_name: originalCompany.company_name,\n    original_company_url: originalCompany.url,\n    original_company_industry: originalCompany.industry,\n    original_company_region: originalCompany.region,\n    original_company_size: originalCompany.size,\n    original_company_size_category: originalCompany.size_category,\n    \n    // Метаданные анализа\n    analysis_timestamp: new Date().toISOString(),\n    analysis_date: new Date().toISOString().split('T')[0],\n    total_competitors_found: data.total_found,\n    analysis_id: `${originalCompany.company_name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${new Date().toISOString().split('T')[0]}`,\n    \n    // Дополнительная классификация\n    is_same_region: competitor.region.toLowerCase().includes(originalCompany.region.toLowerCase().split(',')[0].toLowerCase()),\n    is_same_size: competitor.size_category === originalCompany.size_category,\n    is_high_similarity: competitor.similarity_score >= 80,\n    \n    // Для удобства фильтрации в последующих нодах\n    tags: [\n      competitor.size_category,\n      competitor.similarity_score >= 80 ? 'high-similarity' : 'low-similarity',\n      index < 5 ? 'top-competitor' : 'secondary-competitor'\n    ]\n  }\n}));\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2720,
+        1008
+      ],
+      "id": "dcc24aae-cc18-476f-bb3a-7184a07afbfb",
+      "name": "Normalize URL & Sort"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3296,
+        1280
+      ],
+      "id": "4105a682-5426-4e0a-92ce-696d12714d50",
+      "name": "No Operation, do nothing2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Получаем данные компании из Loop Over Items\nconst companyName = $('Loop Over Items1').first().json.competitor_name;\nconst companyUrl = $('Loop Over Items1').first().json.competitor_url;\n\n// ВАЖНО: Правильно извлекаем данные из HTTP Request\n// Проверяем разные варианты структуры ответа\nlet links = [];\nlet markdown = '';\n\n// Вариант 1: Прямой доступ к data\nif ($input.first().json.data) {\n  links = $input.first().json.data.links || [];\n  markdown = $input.first().json.data.markdown || '';\n}\n// Вариант 2: Прямой доступ к links\nelse if ($input.first().json.links) {\n  links = $input.first().json.links;\n  markdown = $input.first().json.markdown || '';\n}\n// Вариант 3: Вложенная структура\nelse if ($input.first().json.response) {\n  links = $input.first().json.response.links || [];\n  markdown = $input.first().json.response.markdown || '';\n}\n\n// Debug: выводим что получили\nconsole.log('Links found:', links.length);\nconsole.log('First 3 links:', links.slice(0, 3));\n\n// Паттерны для поиска YouTube\nconst youtubePatterns = [\n  /https?:\\/\\/(www\\.)?(youtube\\.com|youtu\\.be|m\\.youtube\\.com)/i,\n  /youtube\\.com\\/(channel|c|user|@)/i\n];\n\n// Находим YouTube ссылки\nconst youtubeLinks = links.filter(link => {\n  if (!link) return false;\n  return youtubePatterns.some(pattern => pattern.test(link));\n});\n\n// Извлекаем первую YouTube ссылку (если есть)\nconst youtubeUrl = youtubeLinks.length > 0 ? youtubeLinks[0] : null;\n\n// Формируем результат\nreturn {\n  json: {\n    companyName: companyName,\n    companyUrl: companyUrl,\n    youtubeChannelFound: youtubeLinks.length > 0,\n    youtubeChannelUrl: youtubeUrl,\n    allYoutubeLinks: youtubeLinks,\n    totalLinksScraped: links.length,\n    timestamp: new Date().toISOString(),\n    debugInfo: {\n      linksArrayLength: links.length,\n      firstLink: links[0] || 'No links found',\n      dataStructure: Object.keys($input.first().json).join(', ')\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3280,
+        1088
+      ],
+      "id": "80fd2645-0e37-4758-88de-0824b61b6e0b",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.firecrawl.dev/v1/scrape",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer fc-e3eb11966aff4575975db593826d3be8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"url\": \"{{ $json.competitor_url }}\",\n  \"formats\": [\n    \"links\",\n    \"markdown\"\n  ],\n  \"onlyMainContent\": false\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3072,
+        1104
+      ],
+      "id": "253a6c35-3d6c-4e6f-a5e1-11172f916dfd",
+      "name": "firecrawl url",
+      "retryOnFail": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3072,
+        928
+      ],
+      "id": "65bc343b-4575-4de1-b54e-d4d4ba9fe260",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "youtubeChannelUrl"
+            },
+            {
+              "fieldName": "companyName"
+            },
+            {
+              "fieldName": "companyUrl"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        3232,
+        928
+      ],
+      "id": "bd05773c-59d8-4239-bf8d-d803fcd0b923",
+      "name": "Sort1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        3568,
+        768
+      ],
+      "id": "0e5c6005-6cfa-42ee-a220-9e43c6b5d025",
+      "name": "Loop Over Items2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Получаем URL канала из правильного поля\nconst url = $json.youtubeChannelUrl; // исправлено: было $json.url\n\n// Проверяем, что URL существует\nif (!url) {\n  return {\n    error: 'YouTube channel URL not found',\n    originalData: $json\n  };\n}\n\nlet channelHandle = '';\n\nif (url.includes('youtube.com/@')) {\n  // Для ссылок типа https://www.youtube.com/@anthropic-ai\n  channelHandle = url.split('/@')[1].split('?')[0].split('/')[0];\n} else if (url.includes('youtube.com/c/')) {\n  // Для ссылок типа https://www.youtube.com/c/channelname\n  channelHandle = url.split('/c/')[1].split('?')[0].split('/')[0];\n} else if (url.includes('youtube.com/channel/')) {\n  // Для ссылок с Channel ID https://www.youtube.com/channel/UCxxxxx\n  channelHandle = url.split('/channel/')[1].split('?')[0].split('/')[0];\n} else if (url.includes('youtube.com/user/')) {\n  // Для старых ссылок https://www.youtube.com/user/username\n  channelHandle = url.split('/user/')[1].split('?')[0].split('/')[0];\n}\n\nreturn {\n  companyName: $json.companyName,\n  originalUrl: url,\n  channelHandle: channelHandle,\n  searchQuery: channelHandle.startsWith('@') ? channelHandle : '@' + channelHandle\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3968,
+        1040
+      ],
+      "id": "f16ab4db-f94f-4557-8a2a-232a5d93bcd9",
+      "name": "split url"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "channelId": "={{ $json.items[0].id.channelId }}"
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        4560,
+        1040
+      ],
+      "id": "cca52ffc-1f68-4792-a36e-3eeacbb9c30e",
+      "name": "Get a channel1"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "part",
+              "value": "snippet"
+            },
+            {
+              "name": "type",
+              "value": "channel"
+            },
+            {
+              "name": "q",
+              "value": "={{ $json.searchQuery }}"
+            },
+            {
+              "name": "key",
+              "value": "AIzaSyDgwEL_yRd4DLKcaJQP9ao7SdeK5EiRRhE"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4128,
+        1040
+      ],
+      "id": "0fd7f425-54a7-4319-84e1-215a04a9c9d6",
+      "name": "get a id channel for nickname"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/playlistItems",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyDgwEL_yRd4DLKcaJQP9ao7SdeK5EiRRhE"
+            },
+            {
+              "name": "playlistId",
+              "value": "={{ $json.contentDetails.relatedPlaylists.uploads }}"
+            },
+            {
+              "name": "part",
+              "value": "snippet,contentDetails"
+            },
+            {
+              "name": "maxResults",
+              "value": "50"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4992,
+        1040
+      ],
+      "id": "04e1fd81-3ee2-4b5f-b7f6-180db0bf50db",
+      "name": "get playlist videos1",
+      "retryOnFail": false,
+      "alwaysOutputData": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Получаем данные из предыдущей ноды\nconst response = $input.first().json;\nconst data = response.body || response;\n\n// Получаем данные о компании из предыдущих узлов\nlet prevNodeData = {};\nlet channelData = {};\ntry {\n  prevNodeData = $('Get a channel').first().json;\n} catch (e) {\n  prevNodeData = {};\n}\ntry {\n  channelData = $('sort data channel and get id').first().json;\n} catch (e) {\n  channelData = {};\n}\n\n// Извлекаем информацию о компании\nlet companyName = $('Loop Over Items2').first().json.companyName;\nlet companyUrl = $('Loop Over Items2').first().json.companyUrl;\n\n// Проверяем наличие данных\nif (!data || !data.items || !Array.isArray(data.items)) {\n  return [{\n    json: {\n      company_name: companyName,\n      company_url: companyUrl,\n      filtered_videos: [],\n      total_videos: 0,\n      has_videos_to_check: false,\n      filter_reason: \"No playlist data available\",\n      processing_date: new Date().toISOString()\n    }\n  }];\n}\n\n// Функция для проверки, является ли видео Shorts\nfunction isYouTubeShort(item) {\n  const title = (item.snippet.title || '').toLowerCase();\n  const description = (item.snippet.description || '').toLowerCase();\n  \n  // Множественные критерии для определения Shorts\n  const shortsIndicators = [\n    title.includes('#shorts'),\n    title.includes('#short'),\n    title.includes('#youtubeshorts'),\n    description.includes('#shorts'),\n    description.includes('#short'),\n    description.includes('#youtubeshorts'),\n    title.includes('shorts'),\n    description.startsWith('#shorts'),\n    title.match(/^#shorts/i)\n  ];\n  \n  return shortsIndicators.some(indicator => indicator);\n}\n\n// Фильтры\nconst oneYearAgo = new Date();\noneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);\n\n// Массивы для хранения видео\nconst videoIds = [];\nconst videoData = {};\nconst skippedVideos = {\n  tooOld: [],\n  shorts: []\n};\n\n// Счетчики для отладки\nlet totalVideos = 0;\nlet videosAfterDateFilter = 0;\nlet videosAfterShortsFilter = 0;\n\n// Обрабатываем каждое видео\nfor (let item of data.items) {\n  totalVideos++;\n  \n  try {\n    const publishedAt = new Date(item.snippet.publishedAt);\n    const videoTitle = item.snippet.title || 'Untitled';\n    const videoId = item.snippet.resourceId.videoId;\n    \n    // Фильтр 1: Проверка даты (последний год)\n    if (publishedAt < oneYearAgo) {\n      skippedVideos.tooOld.push({\n        id: videoId,\n        title: videoTitle,\n        published: publishedAt.toISOString()\n      });\n      continue;\n    }\n    videosAfterDateFilter++;\n    \n    // Фильтр 2: Проверка на Shorts\n    if (isYouTubeShort(item)) {\n      skippedVideos.shorts.push({\n        id: videoId,\n        title: videoTitle\n      });\n      continue;\n    }\n    videosAfterShortsFilter++;\n    \n    // Сохраняем видео для проверки длительности\n    videoIds.push(videoId);\n    videoData[videoId] = {\n      title: videoTitle,\n      description: item.snippet.description,\n      published_at: item.snippet.publishedAt,\n      channel_title: item.snippet.channelTitle,\n      thumbnail: item.snippet.thumbnails?.high?.url || null\n    };\n    \n  } catch (e) {\n    console.log(\"Error processing video item:\", e.message);\n    continue;\n  }\n}\n\n// Если нет видео для проверки\nif (videoIds.length === 0) {\n  return [{\n    json: {\n      company_name: companyName,\n      company_url: companyUrl,\n      filtered_videos: [],\n      filtered_video_count: 0,\n      total_videos_in_playlist: totalVideos,\n      has_videos_to_check: false,\n      filter_stats: {\n        total: totalVideos,\n        after_date_filter: videosAfterDateFilter,\n        after_shorts_filter: videosAfterShortsFilter,\n        final_count: 0\n      },\n      filter_reason: `No suitable videos found. Total: ${totalVideos}, After date: ${videosAfterDateFilter}, After shorts filter: ${videosAfterShortsFilter}`,\n      processing_date: new Date().toISOString()\n    }\n  }];\n}\n\n// Возвращаем данные для следующего этапа (проверка длительности)\nreturn [{\n  json: {\n    company_name: companyName,\n    company_url: companyUrl,\n    video_ids_to_check: videoIds.join(','),\n    video_data: videoData,\n    videos_to_check: videoIds.length,\n    has_videos_to_check: true,\n    filter_stats: {\n      total: totalVideos,\n      after_date_filter: videosAfterDateFilter,\n      after_shorts_filter: videosAfterShortsFilter,\n      to_check_duration: videoIds.length\n    },\n    skipped_videos: skippedVideos,\n    processing_date: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5344,
+        1040
+      ],
+      "id": "882a4fcc-aee8-4013-a2b5-01e67279ae77",
+      "name": "filter video1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "eba8fc9d-0bea-4549-a617-0bbb9a0b31cf",
+              "leftValue": "={{ $json.has_videos_to_check }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5472,
+        1184
+      ],
+      "id": "b7bea6e1-3296-443f-91cf-c823379a54d8",
+      "name": "video = true?1"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/videos",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyDgwEL_yRd4DLKcaJQP9ao7SdeK5EiRRhE"
+            },
+            {
+              "name": "id",
+              "value": "={{ $json.video_ids_to_check }}"
+            },
+            {
+              "name": "part",
+              "value": "contentDetails"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5776,
+        1040
+      ],
+      "id": "960f1ca7-3fe3-4c8d-adee-140270cd15f4",
+      "name": "get video  >60sec1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "862188d5-d982-4075-9451-fbd983964089",
+              "leftValue": "={{ !!$json.items && $json.items.length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5152,
+        1184
+      ],
+      "id": "c8e54013-ea4e-4081-a773-f6c7398e5122",
+      "name": "Valid playlist?1"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4816,
+        1040
+      ],
+      "id": "572a9b49-1b9d-42ba-8838-cc1a98f22cca",
+      "name": "Wait7",
+      "webhookId": "fb3f8ed9-eb51-4a87-b28f-169f02c67b53"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        5616,
+        1040
+      ],
+      "id": "69c35d47-fc88-44cc-9442-3a403302f881",
+      "name": "Wait8",
+      "webhookId": "b5ab6b1c-0391-4576-8a03-a28641873670"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "560d53cb-600b-4637-9036-c1e78dc91035",
+              "leftValue": "={{ $json.youtubeChannelFound }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3792,
+        1184
+      ],
+      "id": "f7706aae-2e6b-45a7-90d0-984fab2dd0fe",
+      "name": "Check YouTube Channel Exists"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8ecb550d-7100-4f29-82de-5c5ab1b5efa4",
+              "leftValue": "={{ $json.contentDetails.relatedPlaylists.uploads }}\n",
+              "rightValue": true,
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4736,
+        1184
+      ],
+      "id": "3a65853c-30c5-4ce1-979e-8b56b4a7979e",
+      "name": "Check Upload Playlist"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "68d14f5d-9882-4d2a-8993-a64f99b4d953",
+              "leftValue": "={{ $json.videos }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        6096,
+        1184
+      ],
+      "id": "893c92d9-533b-44a4-b5c9-9f83da3b90dc",
+      "name": "Check Videos Found"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Получаем ответ от YouTube API с информацией о длительности видео\nconst apiResponse = $input.first().json;\nconst previousData = $('video = true?1').first().json;\n\n// Функция для парсинга длительности YouTube (ISO 8601)\nfunction parseDuration(duration) {\n  if (!duration) return 0;\n  \n  // YouTube возвращает длительность в формате ISO 8601: PT#M#S или PT#H#M#S\n  const match = duration.match(/PT(?:(\\d+)H)?(?:(\\d+)M)?(?:(\\d+)S)?/);\n  \n  if (!match) return 0;\n  \n  const hours = parseInt(match[1] || 0);\n  const minutes = parseInt(match[2] || 0);\n  const seconds = parseInt(match[3] || 0);\n  \n  return hours * 3600 + minutes * 60 + seconds;\n}\n\n// Функция для форматирования длительности\nfunction formatDuration(seconds) {\n  const mins = Math.floor(seconds / 60);\n  const secs = seconds % 60;\n  return `${mins}:${secs.toString().padStart(2, '0')}`;\n}\n\n// Проверяем наличие данных\nif (!apiResponse.items || !Array.isArray(apiResponse.items)) {\n  console.log(\"No video duration data received\");\n  return [{\n    json: {\n      company_name: previousData.company_name || \"Unknown\",\n      company_url: previousData.company_url || null,\n      videos: [],\n      video_count: 0,\n      has_videos: false,\n      filter_stats: previousData.filter_stats || {},\n      error: \"No video data received from YouTube API\",\n      processing_complete: true,\n      processing_date: new Date().toISOString()\n    }\n  }];\n}\n\n// Параметры фильтрации\nconst MIN_DURATION_SECONDS = 15; // Минимум 15 секунд\nconst MAX_DURATION_SECONDS = 60; // Максимум 60 секунд\n\n// Массивы для хранения результатов\nconst filteredVideos = [];\nconst rejectedVideos = {\n  tooShort: [],\n  tooLong: []\n};\n\n// Получаем данные о видео из предыдущего шага\nconst videoData = previousData.video_data || {};\n\n// Обрабатываем каждое видео\nfor (const video of apiResponse.items) {\n  try {\n    const videoId = video.id;\n    const duration = video.contentDetails?.duration;\n    \n    if (!duration) {\n      console.log(`No duration for video ${videoId}`);\n      continue;\n    }\n    \n    const durationInSeconds = parseDuration(duration);\n    const videoInfo = videoData[videoId] || {};\n    \n    // Применяем фильтр по длительности\n    if (durationInSeconds < MIN_DURATION_SECONDS) {\n      rejectedVideos.tooShort.push({\n        id: videoId,\n        title: videoInfo.title || \"Unknown\",\n        duration_seconds: durationInSeconds,\n        duration_formatted: formatDuration(durationInSeconds)\n      });\n    } else if (durationInSeconds > MAX_DURATION_SECONDS) {\n      rejectedVideos.tooLong.push({\n        id: videoId,\n        title: videoInfo.title || \"Unknown\",\n        duration_seconds: durationInSeconds,\n        duration_formatted: formatDuration(durationInSeconds)\n      });\n    } else {\n      // Видео прошло все фильтры\n      filteredVideos.push({\n        id: videoId,\n        url: `https://www.youtube.com/watch?v=${videoId}`,\n        title: videoInfo.title || \"Unknown\",\n        description: videoInfo.description || \"\",\n        published_at: videoInfo.published_at || null,\n        duration_seconds: durationInSeconds,\n        duration_formatted: formatDuration(durationInSeconds),\n        thumbnail: videoInfo.thumbnail || null,\n        channel_title: videoInfo.channel_title || previousData.company_name\n      });\n    }\n    \n  } catch (error) {\n    console.log(`Error processing video: ${error.message}`);\n    continue;\n  }\n}\n\n// Сортируем видео по дате публикации (новые первые)\nfilteredVideos.sort((a, b) => {\n  const dateA = new Date(a.published_at || 0);\n  const dateB = new Date(b.published_at || 0);\n  return dateB - dateA;\n});\n\n// Ограничиваем количество видео до 15\nconst maxVideos = 15;\nconst finalVideos = filteredVideos.slice(0, maxVideos);\n\n// Подготавливаем статистику\nconst stats = {\n  total_checked: apiResponse.items.length,\n  passed_duration_filter: filteredVideos.length,\n  too_short: rejectedVideos.tooShort.length,\n  too_long: rejectedVideos.tooLong.length,\n  final_count: finalVideos.length\n};\n\n// Проверка перед возвратом\nif (!finalVideos || !Array.isArray(finalVideos)) {\n  console.log(\"Warning: finalVideos is not an array\");\n  finalVideos = [];\n}\n// Формируем результат\nreturn [{\n  json: {\n    company_name: previousData.company_name || \"Unknown\",\n    company_url: previousData.company_url || null,\n    videos: finalVideos,\n    video_count: finalVideos.length,\n    has_videos: finalVideos.length > 0,\n    filter_stats: {\n      ...previousData.filter_stats,\n      ...stats\n    },\n    rejected_videos: rejectedVideos,\n    processing_complete: true,\n    processing_date: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5952,
+        1040
+      ],
+      "id": "1ca78583-429c-4831-a73a-25e550188043",
+      "name": "Filter Videos by Duration"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "company_name"
+            },
+            {
+              "fieldName": "company_url"
+            },
+            {
+              "fieldName": "videos"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        6304,
+        1088
+      ],
+      "id": "00678966-e48e-4339-a474-1fdec43cb0f4",
+      "name": "Sort2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3776,
+        752
+      ],
+      "id": "97f588df-4b24-4e6b-beec-f8a610d70080",
+      "name": "No Operation, do nothing3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Сортируем по количеству видео (по убыванию)\nconst sortedItems = $input.all().sort((a, b) => {\n  const aVideos = a.json.video_count || a.json.videos?.length || 0;\n  const bVideos = b.json.video_count || b.json.videos?.length || 0;\n  return bVideos - aVideos; // По убыванию\n});\n\nreturn sortedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4096,
+        688
+      ],
+      "id": "efde0646-2f16-4cdf-9c22-aab2d0d582d6",
+      "name": "sorting videos with videos"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Получаем входные данные\nconst inputData = $input.first().json;\n\n// Парсим JSON из поля text (если это строка)\nlet data;\ntry {\n  data = typeof inputData.text === 'string' \n    ? JSON.parse(inputData.text) \n    : inputData.text;\n} catch (error) {\n  data = [{ text: inputData.text || '', meta: {} }];\n}\n\n// Проверяем, что data — это массив\nif (!Array.isArray(data)) {\n  data = [data];\n}\n\n// Формируем чистый текст\nlet formattedText = '<b>📊 Результаты поиска по YouTube</b>\\n\\n';\n\n// Извлекаем мета-данные\nconst meta = data[0]?.meta || {};\nformattedText += `🔍 Найдено компаний с видео: <b>${meta.companies_with_videos || 0}</b>\\n`;\nformattedText += `📌 Всего компаний: <b>${meta.total_companies || 0}</b>\\n\\n`;\nformattedText += '━━━━━━━━━━━━━━━━━━━━\\n\\n';\n\n// Парсим текст и извлекаем компании\nconst text = data[0]?.text || '';\nconst companyBlocks = text.split('— <b>').slice(1); // Убираем заголовок\n\ncompanyBlocks.forEach((block, index) => {\n  // Извлекаем название компании\n  const companyNameMatch = block.match(/^(.+?)<\\/b>/);\n  const companyName = companyNameMatch ? companyNameMatch[1] : 'Без названия';\n  \n  // Извлекаем сайт\n  const websiteMatch = block.match(/Сайт: <a href=\"(.+?)\">(.+?)<\\/a>/);\n  const website = websiteMatch ? websiteMatch[2] : '';\n  \n  // Извлекаем количество видео\n  const videoCountMatch = block.match(/Видео \\((\\d+)\\):/);\n  const videoCount = videoCountMatch ? videoCountMatch[1] : '0';\n  \n  // Добавляем заголовок компании\n  formattedText += `<b>${index + 1}. ${companyName}</b>\\n`;\n  if (website) {\n    formattedText += `🌐 <a href=\"${websiteMatch[1]}\">${website}</a>\\n`;\n  }\n  formattedText += `🎬 Видео: ${videoCount}\\n\\n`;\n  \n  // Извлекаем видео (БЕЗ ОПИСАНИЙ)\n  const videoMatches = [...block.matchAll(/🎬 Видео \\d+: <a href=\"(.+?)\">(.+?)<\\/a>/g)];\n  \n  videoMatches.forEach((video, vIndex) => {\n    const videoUrl = video[1];\n    const videoTitle = video[2];\n    formattedText += `   ${vIndex + 1}. <a href=\"${videoUrl}\">${videoTitle}</a>\\n`;\n  });\n  \n  formattedText += '\\n━━━━━━━━━━━━━━━━━━━━\\n\\n';\n});\n\nconst fullText = formattedText.trim();\nconst maxLength = 4096; // Лимит Telegram\n\n// ======= РАЗБИВКА НА ЧАСТИ =======\nfunction splitTextIntoChunks(text, maxLength) {\n  const chunks = [];\n  let currentChunk = '';\n  const lines = text.split('\\n');\n  \n  for (const line of lines) {\n    if ((currentChunk + line + '\\n').length <= maxLength) {\n      currentChunk += line + '\\n';\n    } else {\n      if (currentChunk.trim()) {\n        chunks.push(currentChunk.trim());\n      }\n      \n      if (line.length > maxLength) {\n        let remainingLine = line;\n        while (remainingLine.length > maxLength) {\n          chunks.push(remainingLine.substring(0, maxLength));\n          remainingLine = remainingLine.substring(maxLength);\n        }\n        currentChunk = remainingLine ? remainingLine + '\\n' : '';\n      } else {\n        currentChunk = line + '\\n';\n      }\n    }\n  }\n  \n  if (currentChunk.trim()) {\n    chunks.push(currentChunk.trim());\n  }\n  \n  return chunks;\n}\n\nconst textChunks = splitTextIntoChunks(fullText, maxLength);\n\n// Создаем массив объектов для каждой части\nconst outputItems = textChunks.map((chunk, index) => ({\n  json: {\n    message_text: index > 0 \n      ? `📄 Часть ${index + 1}/${textChunks.length}\\n\\n${chunk}`\n      : chunk,\n    part_number: index + 1,\n    total_parts: textChunks.length,\n    character_count: chunk.length,\n    is_last_part: index === textChunks.length - 1\n  }\n}));\n\nreturn outputItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4256,
+        688
+      ],
+      "id": "859a88ad-de70-436a-bdd8-5e53b111230c",
+      "name": "format text"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=Не правильный формат текста.\n\nПример формата: https://openai.com",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1632,
+        1248
+      ],
+      "id": "a31ce656-4308-440e-8917-729dc2ca7989",
+      "name": "Send a text message3",
+      "webhookId": "659bbfe5-b34d-4cd4-9401-4ac622c4b9c1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bb495e77-c60e-4e2d-bcae-963ad02c5964",
+              "leftValue": "={{ $json.pageInfo.totalResults }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4336,
+        1200
+      ],
+      "id": "229e4535-d918-4057-ab12-cae66683a8f3",
+      "name": "check result"
+    },
+    {
+      "parameters": {
+        "content": "## - Приходит сообщение из Telegram с ссылкой.\n## - Если ссылка валидна — два ИИ: один определяет индустрию, другой находит 15 конкурентов.\n## - При ошибке — короткий ответ в чат.\n",
+        "height": 912,
+        "width": 1248,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        656
+      ],
+      "id": "d3ed9e68-da92-405e-8e4e-3d230d6f1815",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## - Парсинг URL гланвых страниц конкурентов и находит url на Youtube канал",
+        "height": 800,
+        "width": 688,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2848,
+        768
+      ],
+      "id": "12e52b6c-cdcb-489f-a537-ad462b98cf18",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Процесс поиска подхоядих видео на youtube. Видео не больше минуты и за последний год",
+        "height": 592,
+        "width": 2816,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3648,
+        976
+      ],
+      "id": "3ead9f33-353e-43f5-b8de-6be49dfc2da1",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Завершающий процесс, оформляеться сообщение со списком найденных видео и отправляется в телеграмм",
+        "height": 528,
+        "width": 1488,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3760,
+        416
+      ],
+      "id": "8b5b3b25-44d7-40e0-9d06-e4fee9c7f76d",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "# 🔑 Необходимые API-ключи для работы workflow\n\nДля корректной работы данного workflow требуется настроить **3 API-ключа**. Ниже — подробная инструкция по их получению и назначению.\n\n---\n\n## 1️⃣ OpenRouter API Key\n\n**Для чего:** Единый доступ ко всем языковым моделям (Perplexity Sonar, основные LLM для AI-агентов)\n\n### Как получить:\n1. Перейдите на [openrouter.ai](https://openrouter.ai/)\n2. Зарегистрируйтесь или войдите в аккаунт\n3. Перейдите в раздел **API Keys**\n4. Создайте новый ключ и скопируйте его\n\n### Где используется:\n- Все ноды, работающие с языковыми моделями\n- Perplexity: Sonar (для поиска и анализа)\n- Основные AI-агенты workflow\n\n> ⚠️ **Важно:** Храните ключ в безопасности. Не публикуйте его в открытом виде.\n\n---\n\n## 2️⃣ YouTube Data API v3 Key\n\n**Для чего:** Получение данных о каналах, плейлистах и видео с YouTube\n\n### Как получить:\n\n#### Шаг 1: Создайте проект в Google Cloud Console\n1. Откройте [Google Cloud Console](https://console.cloud.google.com)\n2. Нажмите **Select a project** → **New Project**\n3. Введите название проекта (например, \"n8n YouTube Integration\")\n4. Нажмите **Create**\n\n#### Шаг 2: Активируйте YouTube Data API v3\n1. В меню слева выберите **APIs & Services** → **Library**\n2. Найдите **\"YouTube Data API v3\"**\n3. Нажмите на API → **Enable**\n\n#### Шаг 3: Создайте API-ключ\n1. Перейдите в **APIs & Services** → **Credentials**\n2. Нажмите **+ Create Credentials** → **API Key**\n3. Скопируйте сгенерированный ключ\n4. *(Опционально)* Ограничьте ключ только для YouTube Data API v3 в настройках безопасности\n\n### Где используется:\n- **Нода:** `Get ID channel for nickname` — получение ID канала по его имени\n- **Нода:** `Get a channel1` — загрузка информации о канале\n- **Нода:** `Get playlist videos1` — получение списка видео из плейлиста\n- **Нода:** `Get video >60sec1` — фильтрация видео длительностью более 60 секунд\n\n> 💡 **Квоты:** Бесплатный лимит — 10,000 запросов/день. Для большинства задач этого достаточно.\n\n---\n\n## 3️⃣ Firecrawl API Key\n\n**Для чего:** Парсинг и извлечение структурированных данных с YouTube (транскрипты, метаданные)\n\n### Как получить:\n1. Перейдите на [firecrawl.dev](https://www.firecrawl.dev/)\n2. Зарегистрируйтесь или войдите\n3. Откройте раздел **API Keys** в Dashboard\n4. Создайте новый ключ и скопируйте его\n\n### Где используется:\n- **Нода:** `Firecrawl URL` — парсинг контента видео (текст, субтитры, метаданные)\n\n> 🔥 **Особенность:** Firecrawl обходит ограничения YouTube и извлекает данные в чистом формате, удобном для AI-обработки.\n\n---\n\n## ✅ Чек-лист перед запуском\n\n- [ ] OpenRouter API Key добавлен в credentials n8n\n- [ ] YouTube Data API v3 Key добавлен в credentials n8n\n- [ ] Firecrawl API Key добавлен в credentials n8n\n- [ ] Все ноды корректно связаны с соответствующими credentials\n- [ ] Проведён тестовый запуск workflow\n\n---\n\n## 📚 Полезные ссылки\n\n- [Документация n8n](https://docs.n8n.io)\n- [YouTube Data API Reference](https://developers.google.com/youtube/v3)\n- [OpenRouter API Docs](https://openrouter.ai/docs)\n- [Firecrawl Documentation](https://docs.firecrawl.dev)\n\n---\n\n**Версия документа:** 1.0  \n**Дата обновления:** 01.10.2025\n\n## devoloper @mxpkns",
+        "height": 2368,
+        "width": 976
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2dcb2427-3ce4-4505-ae08-ff7e05deb675",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Анализирует веб-сайты для определения индустрии и геолокации компании. Сканирует содержимое сайта, контакты, разделы \"О компании\" и другие страницы чтобы точно определить сферу деятельности и местонахождение организации. Возвращает структурированную информацию об отрасли и географическом положении.",
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"perplexity/sonar\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $('If').item.json.referenced }}\"\n    }\n  ],\n  \"temperature\": 0.1\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        464,
+        320
+      ],
+      "id": "47b4c14c-f9a4-4078-b67f-94a3be8aeb43",
+      "name": "Perplexity: Sonar2"
+    },
+    {
+      "parameters": {
+        "model": "google/gemini-2.5-pro",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        464,
+        480
+      ],
+      "id": "c4bcdcab-e529-4b60-a340-57b9388dd640",
+      "name": "gpt4.1 mini1"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "part",
+              "value": "snippet"
+            },
+            {
+              "name": "type",
+              "value": "channel"
+            },
+            {
+              "name": "q",
+              "value": "={{ $json.searchQuery }}"
+            },
+            {
+              "name": "key",
+              "value": "AIzaSyDgwEL_yRd4DLKcaJQP9ao7SdeK5EiRRhE"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        784
+      ],
+      "id": "8abfcc38-e25f-48f7-b5c9-e8aad6f11401",
+      "name": "get a id channel for nickname1"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "channelId": "={{ $json.items[0].id.channelId }}"
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        752,
+        784
+      ],
+      "id": "1dac2371-e06d-418a-a52d-c2fdc65d74f2",
+      "name": "Get a channel"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/playlistItems",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyDgwEL_yRd4DLKcaJQP9ao7SdeK5EiRRhE"
+            },
+            {
+              "name": "playlistId",
+              "value": "={{ $json.contentDetails.relatedPlaylists.uploads }}"
+            },
+            {
+              "name": "part",
+              "value": "snippet,contentDetails"
+            },
+            {
+              "name": "maxResults",
+              "value": "50"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        976
+      ],
+      "id": "5ea29f79-8fce-49ea-8e33-2a311c839e2e",
+      "name": "get playlist videos",
+      "retryOnFail": false,
+      "alwaysOutputData": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/videos",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyDgwEL_yRd4DLKcaJQP9ao7SdeK5EiRRhE"
+            },
+            {
+              "name": "id",
+              "value": "={{ $json.video_ids_to_check }}"
+            },
+            {
+              "name": "part",
+              "value": "contentDetails"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        752,
+        976
+      ],
+      "id": "aba6540e-fb9e-4f0f-8b2f-26f332565df6",
+      "name": "get video  >60sec"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.firecrawl.dev/v1/scrape",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer fc-e3eb11966aff4575975db593826d3be8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"url\": \"{{ $json.competitor_url }}\",\n  \"formats\": [\n    \"links\",\n    \"markdown\"\n  ],\n  \"onlyMainContent\": false\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        1552
+      ],
+      "id": "c074f557-541c-4802-83f1-473b59f65fc9",
+      "name": "firecrawl url1",
+      "retryOnFail": false,
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "Perplexity: Sonar": {
+      "ai_tool": [
+        [
+          {
+            "node": "url analizator",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "url stripe": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "url analizator": {
+      "main": [
+        [
+          {
+            "node": "Competitor Research",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "url analizator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Competitor Research": {
+      "main": [
+        [
+          {
+            "node": "Normalize URL & Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perplexity: Sonar1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Competitor Research",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "sorting videos with videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "url stripe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Wait3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "url analizator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Competitor Research",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt4.1 mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "url analizator",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Structured Output Parser1",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Competitor Research",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait3": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "firecrawl url",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize URL & Sort": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "firecrawl url": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing1": {
+      "main": [
+        [
+          {
+            "node": "Sort1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items2": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check YouTube Channel Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split url": {
+      "main": [
+        [
+          {
+            "node": "get a id channel for nickname",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a channel1": {
+      "main": [
+        [
+          {
+            "node": "Check Upload Playlist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get a id channel for nickname": {
+      "main": [
+        [
+          {
+            "node": "check result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get playlist videos1": {
+      "main": [
+        [
+          {
+            "node": "Valid playlist?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filter video1": {
+      "main": [
+        [
+          {
+            "node": "video = true?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "video = true?1": {
+      "main": [
+        [
+          {
+            "node": "Wait8",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get video  >60sec1": {
+      "main": [
+        [
+          {
+            "node": "Filter Videos by Duration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid playlist?1": {
+      "main": [
+        [
+          {
+            "node": "filter video1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait7": {
+      "main": [
+        [
+          {
+            "node": "get playlist videos1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait8": {
+      "main": [
+        [
+          {
+            "node": "get video  >60sec1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check YouTube Channel Exists": {
+      "main": [
+        [
+          {
+            "node": "split url",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Upload Playlist": {
+      "main": [
+        [
+          {
+            "node": "Wait7",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Videos Found": {
+      "main": [
+        [
+          {
+            "node": "Sort2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Videos by Duration": {
+      "main": [
+        [
+          {
+            "node": "Check Videos Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing3": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sorting videos with videos": {
+      "main": [
+        [
+          {
+            "node": "format text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "format text": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check result": {
+      "main": [
+        [
+          {
+            "node": "Get a channel1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "23888543ab7fca46124b3e59a5fa4e4f62802ef7d2ac315b4a55ba8970d3f6ec"
+  }
+}
